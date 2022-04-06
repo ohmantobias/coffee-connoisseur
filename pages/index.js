@@ -3,10 +3,21 @@ import Image from "next/image";
 import styles from "../styles/Home.module.css";
 import Banner from "../components/banner";
 import Card from "../components/card";
+import { Fragment } from "react";
 
-import coffeeStores from "../data/coffee-stores.json";
+import coffeeStoresData from "../data/coffee-stores.json";
 
-export default function Home() {
+export async function getStaticProps(context) {
+  return {
+    props: {
+      coffeeStores: coffeeStoresData,
+    },
+  };
+}
+
+export default function Home(props) {
+  const { coffeeStores } = props;
+
   const handleOnBannerBtnClick = () => {
     console.log("btn clicked");
   };
@@ -32,19 +43,24 @@ export default function Home() {
             alt="Hero img"
           />
         </div>
-        <div className={styles.cardLayout}>
-          {coffeeStores.map((coffeeStore) => {
-            const { name, imgUrl, id, websiteUrl } = coffeeStore;
-            return (
-              <Card
-                key={id}
-                name={name}
-                imgUrl={imgUrl}
-                href={`/coffee-store/${id}`}
-              />
-            );
-          })}
-        </div>
+        {coffeeStores.length > 0 && (
+          <Fragment>
+            <h2 className={styles.heading2}>Toronto stores</h2>
+            <div className={styles.cardLayout}>
+              {coffeeStores.map((coffeeStore) => {
+                const { name, imgUrl, id } = coffeeStore;
+                return (
+                  <Card
+                    key={id}
+                    name={name}
+                    imgUrl={imgUrl}
+                    href={`/coffee-store/${id}`}
+                  />
+                );
+              })}
+            </div>
+          </Fragment>
+        )}
       </main>
     </div>
   );
