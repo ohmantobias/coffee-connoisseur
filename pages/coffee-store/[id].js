@@ -26,3 +26,29 @@ export function getStaticPaths() {
     fallback: true,
   };
 }
+
+const CoffeStore = (props) => {
+  const router = useRouter();
+
+  if (router.isFallback) {
+    return <div>Loading..</div>;
+  }
+  const { address, name, neighbourhood } = props.coffeeStore;
+
+  console.log(props);
+  return (
+    <div>
+      <Head>
+        <title>{name}</title>
+      </Head>
+      <Link href="/">
+        <a>Back to home</a>
+      </Link>
+      <p>{address}</p>
+      <p>{name}</p>
+      <p>{neighbourhood}</p>
+    </div>
+  );
+};
+
+export default CoffeStore;
