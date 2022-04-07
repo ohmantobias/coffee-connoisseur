@@ -1,23 +1,29 @@
 import { useRouter } from "next/router";
 import Link from "next/link";
 import Head from "next/head";
+import Image from "next/image";
+import cls from "classnames";
+import { fetchCoffeeStores } from "../../lib/coffee-stores";
 
-import coffeStoresData from "../../data/coffee-stores.json";
+import styles from "../../styles/CoffeeStore.module.css";
 
-export function getStaticProps({ params }) {
+export async function getStaticProps({ params }) {
+  const coffeStoresData = await fetchCoffeeStores();
+
   return {
     props: {
       coffeeStore: coffeStoresData.find((coffeStore) => {
-        return coffeStore.id.toString() === params.id;
+        return coffeStore.fsq_id.toString() === params.id;
       }),
     },
   };
 }
 
-export function getStaticPaths() {
+export async function getStaticPaths() {
+  const coffeStoresData = await fetchCoffeeStores();
   const paths = coffeStoresData.map((coffeStore) => {
     return {
-      params: { id: coffeStore.id.toString() },
+      params: { id: coffeStore.fsq_id.toString() },
     };
   });
 
@@ -33,20 +39,75 @@ const CoffeStore = (props) => {
   if (router.isFallback) {
     return <div>Loading..</div>;
   }
-  const { address, name, neighbourhood } = props.coffeeStore;
+  const { address } = props.coffeeStore.location;
 
-  console.log(props);
+  const handleUpvoteButton = () => {
+    console.log("upvote");
+  };
+
   return (
-    <div>
+    <div className={styles.layout}>
       <Head>
-        <title>{name}</title>
+        <title>{props.coffeeStore.name}</title>
       </Head>
-      <Link href="/">
-        <a>Back to home</a>
-      </Link>
-      <p>{address}</p>
-      <p>{name}</p>
-      <p>{neighbourhood}</p>
+      <div className={styles.container}>
+        <div className={styles.col1}>
+          <div className={styles.backToHomeLink}>
+            <Link href="/">
+              <a>Back to home</a>
+            </Link>
+          </div>
+          <div className={styles.nameWrapper}>
+            <h1 className={styles.name}> {props.coffeeStore.name}</h1>
+          </div>
+          <Image
+            src="https://images.unsplash.com/photo-1504753793650-d4a2b783c15e?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80"
+            alt={props.coffeeStore.name}
+            width={600}
+            height={360}
+            className={styles.storeImg}
+          ></Image>
+        </div>
+        <div className={cls("glass", styles.col2)}>
+          <div className={styles.iconWrapper}>
+            <Image
+              src="/static/icons/places.svg"
+              alt="icon"
+              width="24"
+              height="24 "
+            />
+            <p className={styles.text}>{address}</p>
+          </div>
+          {props.coffeeStore.location.neighborhood ? (
+            <div className={styles.iconWrapper}>
+              <Image
+                src="/static/icons/nearMe.svg"
+                alt="icon"
+                width="24"
+                height="24 "
+              />
+              <p className={styles.text}>
+                {props.coffeeStore.location.neighborhood[0]}
+              </p>
+            </div>
+          ) : (
+            ""
+          )}
+
+          <div className={styles.iconWrapper}>
+            <Image
+              src="/static/icons/star.svg"
+              alt="icon"
+              width="24"
+              height="24 "
+            />
+            <p className={styles.text}>1</p>
+          </div>
+          <button className={styles.upvoteButton} onClick={handleUpvoteButton}>
+            Up vote
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

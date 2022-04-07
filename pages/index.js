@@ -4,20 +4,21 @@ import styles from "../styles/Home.module.css";
 import Banner from "../components/banner";
 import Card from "../components/card";
 import { Fragment } from "react";
-
-import coffeeStoresData from "../data/coffee-stores.json";
+import { fetchCoffeeStores } from "../lib/coffee-stores";
 
 export async function getStaticProps(context) {
+  const coffeeStores = await fetchCoffeeStores();
+
   return {
     props: {
-      coffeeStores: coffeeStoresData,
+      coffeeStores: coffeeStores,
     },
   };
 }
 
 export default function Home(props) {
   const { coffeeStores } = props;
-
+  console.log(coffeeStores);
   const handleOnBannerBtnClick = () => {
     console.log("btn clicked");
   };
@@ -48,13 +49,13 @@ export default function Home(props) {
             <h2 className={styles.heading2}>Toronto stores</h2>
             <div className={styles.cardLayout}>
               {coffeeStores.map((coffeeStore) => {
-                const { name, imgUrl, id } = coffeeStore;
+                const { name, fsq_id } = coffeeStore;
                 return (
                   <Card
-                    key={id}
+                    key={fsq_id}
                     name={name}
-                    imgUrl={imgUrl}
-                    href={`/coffee-store/${id}`}
+                    imgUrl="https://images.unsplash.com/photo-1504753793650-d4a2b783c15e?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80"
+                    href={`/coffee-store/${fsq_id}`}
                   />
                 );
               })}
