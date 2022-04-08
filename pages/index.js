@@ -49,12 +49,12 @@ export default function Home(props) {
             <h2 className={styles.heading2}>Toronto stores</h2>
             <div className={styles.cardLayout}>
               {coffeeStores.map((coffeeStore) => {
-                const { name, fsq_id } = coffeeStore;
+                const { name, fsq_id, imgUrl } = coffeeStore;
                 return (
                   <Card
                     key={fsq_id}
                     name={name}
-                    imgUrl="https://images.unsplash.com/photo-1504753793650-d4a2b783c15e?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80"
+                    imgUrl={imgUrl}
                     href={`/coffee-store/${fsq_id}`}
                   />
                 );

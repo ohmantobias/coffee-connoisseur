@@ -41,6 +41,7 @@ const CoffeStore = (props) => {
   }
   const { address } = props.coffeeStore.location;
 
+  console.log(props);
   const handleUpvoteButton = () => {
     console.log("upvote");
   };
@@ -54,14 +55,14 @@ const CoffeStore = (props) => {
         <div className={styles.col1}>
           <div className={styles.backToHomeLink}>
             <Link href="/">
-              <a>Back to home</a>
+              <a>&larr; Back to home</a>
             </Link>
           </div>
           <div className={styles.nameWrapper}>
             <h1 className={styles.name}> {props.coffeeStore.name}</h1>
           </div>
           <Image
-            src="https://images.unsplash.com/photo-1504753793650-d4a2b783c15e?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80"
+            src={props.coffeeStore.imgUrl}
             alt={props.coffeeStore.name}
             width={600}
             height={360}
