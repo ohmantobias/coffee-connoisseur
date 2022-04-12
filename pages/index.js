@@ -5,6 +5,10 @@ import Banner from "../components/banner";
 import Card from "../components/card";
 import { Fragment } from "react";
 import { fetchCoffeeStores } from "../lib/coffee-stores";
+import useTrackLocation from "../hooks/use-track-location";
+import { useEffect, useState, useContext } from "react";
+import { StoreContext } from "../store/store-context";
+import { ACTION_TYPES } from "../store/store-context";
 
 export async function getStaticProps(context) {
   const coffeeStores = await fetchCoffeeStores();
@@ -18,9 +22,35 @@ export async function getStaticProps(context) {
 
 export default function Home(props) {
   const { coffeeStores } = props;
-  console.log(coffeeStores);
+  const { handleTrackLocation, locationErrorMsg, isFindingLocation } =
+    useTrackLocation();
+
+  // const [coffeeStoresNearMe, setCoffeeStoresNearMe] = useState([]);
+  const { dispatch, state } = useContext(StoreContext);
+  useEffect(() => {
+    if (!state.latLong) return;
+
+    const fetchCoffeeStoresNearby = async () => {
+      try {
+        const fetchedCoffeeStores = await fetchCoffeeStores(
+          state.latLong,
+          "coffee",
+          30
+        );
+        dispatch({
+          type: ACTION_TYPES.SET_COFFEE_STORES,
+          payload: { coffeeStoresNearMe: fetchedCoffeeStores },
+        });
+        // setCoffeeStoresNearMe(fetchedCoffeeStores);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchCoffeeStoresNearby();
+  }, [state.latLong]);
+
   const handleOnBannerBtnClick = () => {
-    console.log("btn clicked");
+    handleTrackLocation();
   };
 
   return (
@@ -34,7 +64,9 @@ export default function Home(props) {
       <main className={styles.main}>
         <Banner
           handleOnClick={handleOnBannerBtnClick}
-          buttonText="View stores nearby"
+          buttonText={`${
+            !isFindingLocation ? "View stores nearby" : "...locating"
+          } `}
         />
         <div className={styles.heroImage}>
           <Image
@@ -44,6 +76,24 @@ export default function Home(props) {
             alt="Hero img"
           />
         </div>
+        {state.coffeeStoresNearMe.length > 0 && (
+          <Fragment>
+            <h2 className={styles.heading2}>Stores near me</h2>
+            <div className={styles.cardLayout}>
+              {state.coffeeStoresNearMe.map((coffeeStore) => {
+                const { name, fsq_id, imgUrl } = coffeeStore;
+                return (
+                  <Card
+                    key={fsq_id}
+                    name={name}
+                    imgUrl={imgUrl}
+                    href={`/coffee-store/${fsq_id}`}
+                  />
+                );
+              })}
+            </div>
+          </Fragment>
+        )}
         {coffeeStores.length > 0 && (
           <Fragment>
             <h2 className={styles.heading2}>Toronto stores</h2>

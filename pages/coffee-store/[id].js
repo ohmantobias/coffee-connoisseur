@@ -5,16 +5,23 @@ import Image from "next/image";
 import cls from "classnames";
 import { fetchCoffeeStores } from "../../lib/coffee-stores";
 
+import { useContext, useState, useEffect } from "react";
+import { StoreContext } from "../../store/store-context";
+
+import { isEmpty } from "../../utils/index";
+
 import styles from "../../styles/CoffeeStore.module.css";
 
 export async function getStaticProps({ params }) {
   const coffeStoresData = await fetchCoffeeStores();
 
+  const findCoffeStoreById = coffeStoresData.find((coffeStore) => {
+    return coffeStore.fsq_id.toString() === params.id;
+  });
+
   return {
     props: {
-      coffeeStore: coffeStoresData.find((coffeStore) => {
-        return coffeStore.fsq_id.toString() === params.id;
-      }),
+      coffeeStore: findCoffeStoreById ? findCoffeStoreById : {},
     },
   };
 }
@@ -35,13 +42,34 @@ export async function getStaticPaths() {
 
 const CoffeStore = (props) => {
   const router = useRouter();
+  const id = router.query.id;
+  const [coffeeStore, setCoffeeStore] = useState(props.coffeeStore || {});
+  const {
+    state: { coffeeStoresNearMe },
+  } = useContext(StoreContext);
+
+  // console.log("nära mig", coffeeStoresNearMe);
+  // console.log("coffee shops use före useeffect", coffeeStore);
+
+  useEffect(() => {
+    if (isEmpty(props.coffeeStore)) {
+      if (coffeeStoresNearMe.length > 0) {
+        const findCoffeStoreById = coffeeStoresNearMe.find((coffeStore) => {
+          return coffeStore.fsq_id.toString() === id;
+        });
+        setCoffeeStore(findCoffeStoreById);
+      }
+    }
+  }, [id]);
+
+  // console.log("coffee shops use efter useeffect", coffeeStore);
 
   if (router.isFallback) {
     return <div>Loading..</div>;
   }
-  const { address } = props.coffeeStore.location;
+  console.log(coffeeStore);
 
-  console.log(props);
+  const { name, address, neighborhood } = coffeeStore;
   const handleUpvoteButton = () => {
     console.log("upvote");
   };
@@ -49,7 +77,7 @@ const CoffeStore = (props) => {
   return (
     <div className={styles.layout}>
       <Head>
-        <title>{props.coffeeStore.name}</title>
+        <title>{name}</title>
       </Head>
       <div className={styles.container}>
         <div className={styles.col1}>
@@ -59,11 +87,14 @@ const CoffeStore = (props) => {
             </Link>
           </div>
           <div className={styles.nameWrapper}>
-            <h1 className={styles.name}> {props.coffeeStore.name}</h1>
+            <h1 className={styles.name}> {name}</h1>
           </div>
           <Image
-            src={props.coffeeStore.imgUrl}
-            alt={props.coffeeStore.name}
+            src={
+              coffeeStore.imgUrl ||
+              "https://images.unsplash.com/photo-1498804103079-a6351b050096?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2468&q=80"
+            }
+            alt={name}
             width={600}
             height={360}
             className={styles.storeImg}
@@ -79,7 +110,7 @@ const CoffeStore = (props) => {
             />
             <p className={styles.text}>{address}</p>
           </div>
-          {props.coffeeStore.location.neighborhood ? (
+          {neighborhood ? (
             <div className={styles.iconWrapper}>
               <Image
                 src="/static/icons/nearMe.svg"
@@ -87,14 +118,11 @@ const CoffeStore = (props) => {
                 width="24"
                 height="24 "
               />
-              <p className={styles.text}>
-                {props.coffeeStore.location.neighborhood[0]}
-              </p>
+              <p className={styles.text}>{neighborhood[0]}</p>
             </div>
           ) : (
             ""
           )}
-
           <div className={styles.iconWrapper}>
             <Image
               src="/static/icons/star.svg"
