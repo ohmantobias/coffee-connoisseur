@@ -40,36 +40,67 @@ export async function getStaticPaths() {
   };
 }
 
-const CoffeStore = (props) => {
+const CoffeeStore = (props) => {
   const router = useRouter();
-  const id = router.query.id;
+  const RouterId = router.query.id;
   const [coffeeStore, setCoffeeStore] = useState(props.coffeeStore || {});
   const {
     state: { coffeeStoresNearMe },
   } = useContext(StoreContext);
 
-  // console.log("nära mig", coffeeStoresNearMe);
-  // console.log("coffee shops use före useeffect", coffeeStore);
+  const handleCreateCoffeeStore = async (coffeeStoreData) => {
+    const { name, voting, imgUrl, address, neighborhood, fsq_id } =
+      coffeeStoreData;
+
+    try {
+      const response = await fetch("/api/createCoffeeStore", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          voting: 0,
+          imgUrl,
+          address: address ? address : "",
+          neighborhood: neighborhood ? neighborhood : "",
+          fsq_id,
+        }),
+      });
+
+      const dbCoffeeStore = await response.json();
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   useEffect(() => {
+    console.log("step1");
     if (isEmpty(props.coffeeStore)) {
+      console.log("step2");
       if (coffeeStoresNearMe.length > 0) {
-        const findCoffeStoreById = coffeeStoresNearMe.find((coffeStore) => {
-          return coffeStore.fsq_id.toString() === id;
+        console.log("step3");
+        const findCoffeeStoreById = coffeeStoresNearMe.find((coffeeStore) => {
+          return coffeeStore.fsq_id.toString() === RouterId;
         });
-        setCoffeeStore(findCoffeStoreById);
+        console.log("step4");
+        if (findCoffeeStoreById) {
+          console.log("step5");
+          setCoffeeStore(findCoffeeStoreById);
+          handleCreateCoffeeStore(findCoffeeStoreById);
+        }
       }
+    } else {
+      handleCreateCoffeeStore(coffeeStore);
     }
-  }, [id]);
+  }, [RouterId]);
 
-  // console.log("coffee shops use efter useeffect", coffeeStore);
+  const { name = "", address = "", neighborhood = "" } = coffeeStore;
 
   if (router.isFallback) {
     return <div>Loading..</div>;
   }
-  console.log(coffeeStore);
 
-  const { name, address, neighborhood } = coffeeStore;
   const handleUpvoteButton = () => {
     console.log("upvote");
   };
@@ -141,4 +172,4 @@ const CoffeStore = (props) => {
   );
 };
 
-export default CoffeStore;
+export default CoffeeStore;
