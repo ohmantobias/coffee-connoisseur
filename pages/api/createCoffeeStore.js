@@ -7,22 +7,11 @@ import {
 const createCoffeeStore = async (req, res) => {
   try {
     const { fsq_id, name, neighbourhood, address, imgUrl, voting } = req.body;
-    console.log("hejhej", req.body);
     if (req.method === "POST") {
       if (fsq_id) {
         const records = await findRecordByFilter(fsq_id);
-        console.log("createrecords", records);
         if (records.length !== 0) {
           return res.json(records);
-          // const findCoffeeStoreRecords = await table
-          //   .select({
-          //     filterByFormula: `fsq_id="${fsq_id}"`,
-          //   })
-          //   .firstPage();
-
-          // if (findCoffeeStoreRecords.length !== 0) {
-          //   const records = getMinifiedRecords(findCoffeeStoreRecords);
-          //   res.json(records);
         } else {
           if (name) {
             const createRecords = await table.create([

@@ -3,12 +3,12 @@ import Link from "next/link";
 import Head from "next/head";
 import Image from "next/image";
 import cls from "classnames";
-import { fetchCoffeeStores } from "../../lib/coffee-stores";
+import useSWR from "swr";
 
+import { fetchCoffeeStores } from "../../lib/coffee-stores";
 import { useContext, useState, useEffect } from "react";
 import { StoreContext } from "../../store/store-context";
-
-import { isEmpty } from "../../utils/index";
+import { isEmpty, fetcher } from "../../utils/index";
 
 import styles from "../../styles/CoffeeStore.module.css";
 
@@ -42,8 +42,9 @@ export async function getStaticPaths() {
 
 const CoffeeStore = (props) => {
   const router = useRouter();
-  const RouterId = router.query.id;
+  const routerId = router.query.id;
   const [coffeeStore, setCoffeeStore] = useState(props.coffeeStore || {});
+  const [votingCount, setVotingCount] = useState(0);
   const {
     state: { coffeeStoresNearMe },
   } = useContext(StoreContext);
@@ -75,17 +76,13 @@ const CoffeeStore = (props) => {
   };
 
   useEffect(() => {
-    console.log("step1");
     if (isEmpty(props.coffeeStore)) {
-      console.log("step2");
       if (coffeeStoresNearMe.length > 0) {
-        console.log("step3");
         const findCoffeeStoreById = coffeeStoresNearMe.find((coffeeStore) => {
-          return coffeeStore.fsq_id.toString() === RouterId;
+          return coffeeStore.fsq_id.toString() === routerId;
         });
-        console.log("step4");
+
         if (findCoffeeStoreById) {
-          console.log("step5");
           setCoffeeStore(findCoffeeStoreById);
           handleCreateCoffeeStore(findCoffeeStoreById);
         }
@@ -93,16 +90,46 @@ const CoffeeStore = (props) => {
     } else {
       handleCreateCoffeeStore(coffeeStore);
     }
-  }, [RouterId]);
+  }, [routerId]);
 
   const { name = "", address = "", neighborhood = "" } = coffeeStore;
+
+  const { data, error } = useSWR(
+    `/api/getCoffeeStoreById?id=${routerId}`,
+    fetcher
+  );
+
+  useEffect(() => {
+    if (data && data.length > 0) {
+      setCoffeeStore(data[0]);
+      setVotingCount(data[0].voting);
+    }
+  }, [data]);
 
   if (router.isFallback) {
     return <div>Loading..</div>;
   }
 
-  const handleUpvoteButton = () => {
-    console.log("upvote");
+  const handleUpvoteButton = async () => {
+    try {
+      const response = await fetch("/api/favouriteCoffeeStoreById", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fsq_id: routerId,
+        }),
+      });
+
+      const dbCoffeeStore = await response.json();
+      if (dbCoffeeStore && dbCoffeeStore.length > 0) {
+        let count = votingCount + 1;
+        setVotingCount(count);
+      }
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   return (
@@ -161,7 +188,7 @@ const CoffeeStore = (props) => {
               width="24"
               height="24 "
             />
-            <p className={styles.text}>1</p>
+            <p className={styles.text}>{votingCount}</p>
           </div>
           <button className={styles.upvoteButton} onClick={handleUpvoteButton}>
             Up vote

@@ -27,6 +27,7 @@ export default function Home(props) {
 
   // const [coffeeStoresNearMe, setCoffeeStoresNearMe] = useState([]);
   const { dispatch, state } = useContext(StoreContext);
+
   useEffect(() => {
     const fetchCoffeeStoresNearby = async () => {
       if (state.latLong) {
